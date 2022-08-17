@@ -2,7 +2,7 @@ import kotlin.random.Random
 
 private const val TREE_COUNT = 4
 
-typealias pickFruitsStrategy = (KarasuBoard) -> Pair<Int, Int>
+typealias pickFruitStrategy = (KarasuBoard) -> Int
 
 class KarasuBoard(
     initialFruitCount: Int = 10,
@@ -11,23 +11,22 @@ class KarasuBoard(
     val fruitsInTree: Array<Int> = Array(TREE_COUNT) { initialFruitCount }
     var karasuPieces = initialKarasuPieces
 
-    fun play(pickFruitsStrategy: pickFruitsStrategy): Boolean {
+    fun play(pickFruitsStrategy: pickFruitStrategy): Boolean {
         while (!isGameFinished) {
             step(pickFruitsStrategy)
         }
         return playerWins
     }
 
-    private fun step(chooseTwo: pickFruitsStrategy) {
+    private fun step(pickFruit: pickFruitStrategy) {
         when (val dice = Random.nextInt(6)) {
             0, 1, 2, 3 -> {
                 removeFruit(dice)
             }
 
             4 -> {
-                val fruitsToRemove = chooseTwo(this)
-                removeFruit(fruitsToRemove.first)
-                removeFruit(fruitsToRemove.second)
+                removeFruit(pickFruit(this))
+                removeFruit(pickFruit(this))
             }
 
             5 -> {
@@ -57,46 +56,29 @@ val KarasuBoard.treesWithFruits
         .filter { fruitsInTree[it] > 0 }
         .ifEmpty { sequenceOf(0) }
 
-val randomFruitsStrategy: pickFruitsStrategy = {
-    Pair(
-        it.treesWithFruits.shuffled().first(),
-        it.treesWithFruits.shuffled().first()
-    )
+val randomFruitStrategy: pickFruitStrategy = { board ->
+    board.treesWithFruits.shuffled().first()
 }
 
-val minFruitsStrategy: pickFruitsStrategy = { karasuBoard ->
-    Pair(
-        karasuBoard.treesWithFruits.minBy { karasuBoard.fruitsInTree[it] },
-        karasuBoard.treesWithFruits.minBy { karasuBoard.fruitsInTree[it] },
-    )
+val minFruitStrategy: pickFruitStrategy = { board ->
+    board.treesWithFruits.minBy { tree -> board.fruitsInTree[tree] }
 }
 
-val maxFruitsStrategy: pickFruitsStrategy = { karasuBoard ->
-    Pair(
-        karasuBoard.treesWithFruits.maxBy { karasuBoard.fruitsInTree[it] },
-        karasuBoard.treesWithFruits.maxBy { karasuBoard.fruitsInTree[it] },
-    )
+val maxFruitStrategy: pickFruitStrategy = { board ->
+    board.treesWithFruits.maxBy { tree -> board.fruitsInTree[tree] }
 }
 
-val firstFruitsStrategy: pickFruitsStrategy = { karasuBoard ->
-    Pair(
-        karasuBoard.treesWithFruits.first(),
-        karasuBoard.treesWithFruits.first(),
-    )
+val firstFruitStrategy: pickFruitStrategy = { board ->
+    board.treesWithFruits.first()
 }
 
-val zeroFruitsStrategy: pickFruitsStrategy = { karasuBoard ->
-    Pair(
-        0,
-        0,
-    )
-}
+val zeroFruitsStrategy: pickFruitStrategy = { board -> 0 }
 
 val strategies = listOf(
-    Pair("random", randomFruitsStrategy),
-    Pair("min", minFruitsStrategy),
-    Pair("max", maxFruitsStrategy),
-    Pair("first", firstFruitsStrategy),
+    Pair("random", randomFruitStrategy),
+    Pair("min", minFruitStrategy),
+    Pair("max", maxFruitStrategy),
+    Pair("first", firstFruitStrategy),
     Pair("zero", zeroFruitsStrategy),
 )
 
