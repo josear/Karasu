@@ -52,36 +52,36 @@ fun KarasuBoard.println() {
     println("F: ${fruitsInTree.joinToString(",")} K: $karasuPieces")
 }
 
-val KarasuBoard.availableFruitsIndexes
+val KarasuBoard.treesWithFruits
     get() = fruitsInTree.indices.asSequence()
         .filter { fruitsInTree[it] > 0 }
         .ifEmpty { sequenceOf(0) }
 
 val randomFruitsStrategy: pickFruitsStrategy = {
     Pair(
-        it.availableFruitsIndexes.shuffled().first(),
-        it.availableFruitsIndexes.shuffled().first()
+        it.treesWithFruits.shuffled().first(),
+        it.treesWithFruits.shuffled().first()
     )
 }
 
 val minFruitsStrategy: pickFruitsStrategy = { karasuBoard ->
     Pair(
-        karasuBoard.availableFruitsIndexes.minBy { karasuBoard.fruitsInTree[it] },
-        karasuBoard.availableFruitsIndexes.minBy { karasuBoard.fruitsInTree[it] },
+        karasuBoard.treesWithFruits.minBy { karasuBoard.fruitsInTree[it] },
+        karasuBoard.treesWithFruits.minBy { karasuBoard.fruitsInTree[it] },
     )
 }
 
 val maxFruitsStrategy: pickFruitsStrategy = { karasuBoard ->
     Pair(
-        karasuBoard.availableFruitsIndexes.maxBy { karasuBoard.fruitsInTree[it] },
-        karasuBoard.availableFruitsIndexes.maxBy { karasuBoard.fruitsInTree[it] },
+        karasuBoard.treesWithFruits.maxBy { karasuBoard.fruitsInTree[it] },
+        karasuBoard.treesWithFruits.maxBy { karasuBoard.fruitsInTree[it] },
     )
 }
 
 val firstFruitsStrategy: pickFruitsStrategy = { karasuBoard ->
     Pair(
-        karasuBoard.availableFruitsIndexes.first(),
-        karasuBoard.availableFruitsIndexes.first(),
+        karasuBoard.treesWithFruits.first(),
+        karasuBoard.treesWithFruits.first(),
     )
 }
 
