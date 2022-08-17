@@ -1,20 +1,25 @@
 import kotlin.random.Random
 
+private const val TREE_COUNT = 4
+
+typealias pickFruitStrategy = (KarasuBoard) -> Pair<Int, Int>
+
 class KarasuBoard(
     initialFruitCount: Int = 10,
     initialKarasuPieces: Int = 9,
 ) {
-    val fruits: Array<Int> = Array(4) { initialFruitCount }
-    var remainingKarasuPieces = initialKarasuPieces
+    val fruitsInTree: Array<Int> = Array(TREE_COUNT) { initialFruitCount }
+    var karasuPieces = initialKarasuPieces
 
-    val isFinished get() = playerWinws || karasuWinws
+    fun play(pickTwoFruitsStrategy: pickFruitStrategy): Boolean {
+        while (!isGameFinished) {
+            step(pickTwoFruitsStrategy)
+        }
+        return playerWins
+    }
 
-    val playerWinws get() = fruits.all { it == 0 }
-
-    val karasuWinws get() = remainingKarasuPieces == 0
-
-    fun step(chooseTwo: (KarasuBoard) -> Pair<Int, Int>) {
-        if (isFinished) return
+    private fun step(chooseTwo: pickFruitStrategy) {
+        if (isGameFinished) return
 
         when (val dice = Random.nextInt(6)) {
             0, 1, 2, 3 -> {
@@ -28,62 +33,61 @@ class KarasuBoard(
             }
 
             5 -> {
-                --remainingKarasuPieces
+                --karasuPieces
             }
         }
     }
 
-    private fun removeFruit(fruitToRemove: Int) {
-        if (fruitToRemove in 0..3 && fruits[fruitToRemove] > 0)
-            fruits[fruitToRemove]--
-    }
-}
+    val isGameFinished get() = playerWins || karasuWins
 
-fun KarasuBoard.play(chooseTwo: (KarasuBoard) -> Pair<Int, Int>): Boolean {
-    while (!isFinished) {
-        step(chooseTwo)
+    val playerWins get() = fruitsInTree.all { it == 0 }
+
+    val karasuWins get() = karasuPieces == 0
+
+    private fun removeFruit(fruitToRemove: Int) {
+        if (fruitToRemove in 0..3 && fruitsInTree[fruitToRemove] > 0)
+            fruitsInTree[fruitToRemove]--
     }
-    return playerWinws
 }
 
 fun KarasuBoard.println() {
-    println("F: ${fruits.joinToString(",")} K: $remainingKarasuPieces")
+    println("F: ${fruitsInTree.joinToString(",")} K: $karasuPieces")
 }
 
 val KarasuBoard.availableFruitsIndexes
-    get() = fruits.indices.asSequence()
-        .filter { fruits[it] > 0 }
+    get() = fruitsInTree.indices.asSequence()
+        .filter { fruitsInTree[it] > 0 }
         .ifEmpty { sequenceOf(0) }
 
-val randomFruitsStrategy: (KarasuBoard) -> Pair<Int, Int> = {
+val randomFruitsStrategy: pickFruitStrategy = {
     Pair(
         it.availableFruitsIndexes.shuffled().first(),
         it.availableFruitsIndexes.shuffled().first()
     )
 }
 
-val minFruitsStrategy: (KarasuBoard) -> Pair<Int, Int> = { karasuBoard ->
+val minFruitsStrategy: pickFruitStrategy = { karasuBoard ->
     Pair(
-        karasuBoard.availableFruitsIndexes.minBy { karasuBoard.fruits[it] },
-        karasuBoard.availableFruitsIndexes.minBy { karasuBoard.fruits[it] },
+        karasuBoard.availableFruitsIndexes.minBy { karasuBoard.fruitsInTree[it] },
+        karasuBoard.availableFruitsIndexes.minBy { karasuBoard.fruitsInTree[it] },
     )
 }
 
-val maxFruitsStrategy: (KarasuBoard) -> Pair<Int, Int> = { karasuBoard ->
+val maxFruitsStrategy: pickFruitStrategy = { karasuBoard ->
     Pair(
-        karasuBoard.availableFruitsIndexes.maxBy { karasuBoard.fruits[it] },
-        karasuBoard.availableFruitsIndexes.maxBy { karasuBoard.fruits[it] },
+        karasuBoard.availableFruitsIndexes.maxBy { karasuBoard.fruitsInTree[it] },
+        karasuBoard.availableFruitsIndexes.maxBy { karasuBoard.fruitsInTree[it] },
     )
 }
 
-val firstFruitsStrategy: (KarasuBoard) -> Pair<Int, Int> = { karasuBoard ->
+val firstFruitsStrategy: pickFruitStrategy = { karasuBoard ->
     Pair(
         karasuBoard.availableFruitsIndexes.first(),
         karasuBoard.availableFruitsIndexes.first(),
     )
 }
 
-val zeroFruitsStrategy: (KarasuBoard) -> Pair<Int, Int> = { karasuBoard ->
+val zeroFruitsStrategy: pickFruitStrategy = { karasuBoard ->
     Pair(
         0,
         0,
